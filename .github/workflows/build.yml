@@ -1,13 +1,15 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-
-env:
-  shim_version: 0.6.0
-  chart_version: 0.1.0
+    inputs: &inputs
+      version:
+        type: string
+        description: 'Version of the docker image and embedded shim to build'
+        required: true
+        default: '0.5.1'
+  workflow_call:
+    inputs: *inputs
 
 permissions:
   contents: read
@@ -39,8 +41,8 @@ jobs:
           images: |
             ghcr.io/${{ github.repository }}
           tags: |
-            ${{ env.shim_version }}-{{ sha }}
-            ${{ env.shim_version }}
+            ${{ inputs.shim_version }}-{{ sha }}
+            ${{ inputs.shim_version }}
 
       - name: Docker - Build and Push
         uses: docker/build-push-action@v4
@@ -51,16 +53,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SHIM_VERSION=${{ env.shim_version }}
+            SHIM_VERSION=${{ inputs.shim_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Helm - Release
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io/${{ github.repository_owner }} --username ${{ github.actor }} --password-stdin
-          helm package ./chart --version ${{ env.chart_version }} --app-version ${{ env.shim_version }}
-          helm push ./spin-containerd-shim-installer-${{ env.chart_version }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
 
       - name: clear local credentials
         if: always()
