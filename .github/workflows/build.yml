@@ -2,14 +2,12 @@ name: Docker Image CI
 
 on:
   workflow_dispatch:
-    inputs: &inputs
+    inputs:
       version:
-        type: string
         description: 'Version of the docker image and embedded shim to build'
+        type: string
         required: true
         default: '0.5.1'
-  workflow_call:
-    inputs: *inputs
 
 permissions:
   contents: read
