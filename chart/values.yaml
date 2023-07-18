@@ -1,9 +1,10 @@
 # Default values for chart.
 
 image:
-  repository: ghcr.io/fermyon/spin-containerd-shim-installer
   pullPolicy: IfNotPresent
-  tag: 0.6.0
+  registry: ghcr.io
+  repository: fermyon/spin-containerd-shim-installer
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
