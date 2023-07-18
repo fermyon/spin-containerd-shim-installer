@@ -39,8 +39,8 @@ jobs:
           images: |
             ghcr.io/${{ github.repository }}
           tags: |
-            ${{ github.events.inputs.version }}-{{ sha }}
-            ${{ github.events.inputs.version }}
+            ${{ github.event.inputs.version }}-{{ sha }}
+            ${{ github.event.inputs.version }}
 
       - name: Docker - Build and Push
         uses: docker/build-push-action@v4
@@ -51,7 +51,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SHIM_VERSION=${{ github.events.inputs.version }}
+            SHIM_VERSION=${{ github.event.inputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
