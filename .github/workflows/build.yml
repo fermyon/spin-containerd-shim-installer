@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   build-and-push:
+    name: "Build and Push v${{ github.event.inputs.version }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
