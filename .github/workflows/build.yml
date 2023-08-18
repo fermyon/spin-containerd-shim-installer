@@ -1,41 +1,17 @@
 name: Installer Image CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version of the docker image and embedded shim to build'
-        type: string
-        required: true
-        default: '0.5.1'
-  workflow_call:
-    inputs:
-      version:
-        description: 'Version of the docker image and embedded shim to build'
-        type: string
-        required: true
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  preflight:
-    name: "Preflight steps"
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.variables.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - id: variables
-        run: |
-          echo "version=${REF_NAME#v}" >> $GITHUB_OUTPUT
-        env:
-          REF_NAME: "${{ github.ref_name }}"
-
   build-and-push:
-    name: "Build and Push v${{ github.event.inputs.version }}"
+    name: "Build and Push"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -46,7 +22,48 @@ jobs:
       - uses: docker/setup-buildx-action@v2
       - uses: azure/setup-helm@v3
 
+      - name: Set common variables
+        id: variables
+        run: |
+          echo "version=${REF_NAME#v}" >> $GITHUB_OUTPUT
+        env:
+          REF_NAME: "${{ github.ref_name }}"
+
+      - name: Lint Chart
+        id: lint_chart
+        env:
+          version: "${{ steps.variables.outputs.version }}"
+        run: |
+          helm lint ./chart
+
+          code=0
+          if [[ "v$(yq '.version' < ./chart/Chart.yaml)" != "${version}" ]]; then
+            echo "Chart's version should be $version"
+            code=1
+          fi
+
+          if [[ "v$(yq '.appVersion' < ./chart/Chart.yaml)" != "${version}" ]]; then
+            echo "Chart's appVersion should be $version"
+            code=1
+          fi
+
+          if [[ "$(yq '.annotations.spin_containerd_shim_version' < ./chart/Chart.yaml)" != "${version}" ]]; then
+            echo "Chart's annotations.spin_containerd_shim_version should be $version"
+            code=1
+          fi
+
+          if [[ "$(yq '.image.tag' < ./chart/values.yaml)" != "" && "$(yq '.image.tag' < ./chart/values.yaml)" != "${version}" ]]; then
+            echo "Chart's default value for 'image.tag' should be empty or $version"
+            code=1
+          fi
+
+          if [[ $code -ne 0 ]]; then
+            echo "Version linting failed, please fix and push tag again"
+            exit 1
+          fi
+
       - name: Login to ghcr
+        if: ${{ false }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -54,16 +71,18 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker - Metadata
+        if: ${{ false }}
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: |
             ghcr.io/${{ github.repository }}
           tags: |
-            ${{ github.event.inputs.version }}-{{ sha }}
-            ${{ github.event.inputs.version }}
+            ${{ steps.variables.outputs.version }}-{{ sha }}
+            ${{ steps.variables.outputs.version }}
 
       - name: Docker - Build and Push
+        if: ${{ false }}
         uses: docker/build-push-action@v4
         with:
           context: ./image
@@ -72,7 +91,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SHIM_VERSION=${{ github.event.inputs.version }}
+            SHIM_VERSION=${{ steps.variables.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
