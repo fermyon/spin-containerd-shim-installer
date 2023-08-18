@@ -1,4 +1,4 @@
-name: Installer Image CI
+name: Test
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: "Build and Push ${{ env.version }}"
+    name: "Build and Push ${{ github.ref_name }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
