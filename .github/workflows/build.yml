@@ -20,6 +20,20 @@ permissions:
   packages: write
 
 jobs:
+  preflight:
+    name: "Preflight steps"
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.variables.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: variables
+        run: |
+          echo "version=${REF_NAME#v}" >> $GITHUB_OUTPUT
+        env:
+          REF_NAME: "${{ github.ref_name }}"
+
   build-and-push:
     name: "Build and Push v${{ github.event.inputs.version }}"
     runs-on: ubuntu-latest
