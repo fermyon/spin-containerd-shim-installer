@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "chart.fullname" . }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: OnDelete
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      hostPID: true
+      volumes:
+        - name: host-etc-containerd
+          hostPath:
+            path: {{ .Values.installer.hostEtcContainerdPath }}
+        - name: host-bin
+          hostPath:
+            path: {{ .Values.installer.hostBinPath }}
+      initContainers:
+        - name: installer
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            privileged: true
+          env:
+            - name: HOST_CONTAINERD_CONFIG
+              value: /host/etc/containerd/config.toml
+            - name: HOST_BIN
+              value: /host/bin
+          volumeMounts:
+            - name: host-etc-containerd
+              mountPath: /host/etc/containerd
+            - name: host-bin
+              mountPath: /host/bin
+      containers:
+        - name: pause
+          image: k8s.gcr.io/pause:3.1
+          imagePullPolicy: IfNotPresent
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
