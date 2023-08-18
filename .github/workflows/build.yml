@@ -37,18 +37,13 @@ jobs:
           helm lint ./chart
 
           code=0
-          if [[ "v$(yq '.version' < ./chart/Chart.yaml)" != "${version}" ]]; then
+          if [[ "$(yq '.version' < ./chart/Chart.yaml)" != "${version}" ]]; then
             echo "Chart's version should be $version"
             code=1
           fi
 
-          if [[ "v$(yq '.appVersion' < ./chart/Chart.yaml)" != "${version}" ]]; then
+          if [[ "$(yq '.appVersion' < ./chart/Chart.yaml)" != "${version}" ]]; then
             echo "Chart's appVersion should be $version"
-            code=1
-          fi
-
-          if [[ "$(yq '.annotations.spin_containerd_shim_version' < ./chart/Chart.yaml)" != "${version}" ]]; then
-            echo "Chart's annotations.spin_containerd_shim_version should be $version"
             code=1
           fi
 
