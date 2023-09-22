@@ -22,4 +22,4 @@ yq -i ".appVersion = \"${TAG}\"" ./chart/Chart.yaml
 
 # add the change, commit and tag it
 git add ./chart/Chart.yaml
-git commit -m "creating release branch for ${TAG}"
+git commit -s -S -m "creating release branch for ${TAG}"
