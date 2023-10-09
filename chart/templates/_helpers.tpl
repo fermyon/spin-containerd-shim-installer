@@ -34,12 +34,15 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "chart.labels" -}}
-helm.sh/chart: {{ include "chart.chart" . }}
 {{ include "chart.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
+{{- if hasSuffix "-eks" .Chart.AppVersion }}
+app.kubernetes.io/managed-by: EKS
+app.kubernetes.io/version: {{ .Chart.AppVersion | trimSuffix "-eks" | quote }}
+{{- else }}
+helm.sh/chart: {{ include "chart.chart" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "object",
+  "properties": {
+    "installer": {
+      "type": "object",
+      "properties": {
+        "hostEtcContainerdPath": {
+          "type": "string",
+          "description": "Path to the etc/containerd directory on the host",
+          "default": "/etc/containerd"
+        },
+        "hostBinPath": {
+          "type": "string",
+          "description": "Path to the bin directory on the host",
+          "default": "/usr/local/bin"
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "description": "Annotations to be added to the pod"
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits"
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node labels for pod assignment"
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod assignment"
+    }
+  }
+}
