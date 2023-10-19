@@ -3,17 +3,18 @@
 set -e
 
 LOGIN=false
-DOCKER_BUILD=false
-DOCKER_PUSH=false
+BUILD_AND_PUSH=false
+PUSH_MANIFEST=false
+PUSH_CHART=true
 
 SHIM_VERSION="0.8.0"
 ECR_ID="709825985650"
 ECR_REGION="us-east-1"
 ECR_HOST="$ECR_ID.dkr.ecr.$ECR_REGION.amazonaws.com"
-ECR_REPO="$ECR_HOST/fermyon/fermyon-spin"
-DOCKER_TAG="$ECR_REPO:$SHIM_VERSION"
-HELM_CHART="$ECR_REPO"
 
+INSTALLER_IMAGE="$ECR_HOST/fermyon/spin-installer-image:$SHIM_VERSION"
+INSTALLER_IMAGE_ARM64="$ECR_HOST/fermyon/spin-installer-image:$SHIM_VERSION-arm64"
+INSTALLER_IMAGE_AMD64="$ECR_HOST/fermyon/spin-installer-image:$SHIM_VERSION-amd64"
 
 login() {
   # login to aws using a session
@@ -38,52 +39,58 @@ if [ "$LOGIN" = true ]; then
   login
 fi
 
-declare -a architectures=("amd64" "arm64")
-declare -a tags=()
-for arch in "${architectures[@]}"
-do
-  tag="$DOCKER_TAG-$arch-1"
-  if [ "$DOCKER_BUILD" = true ]; then
-    echo "Building docker image for $arch..."
-    docker build \
-      --provenance false \
-      --platform "linux/$arch" \
-      --build-arg "SHIM_VERSION=$SHIM_VERSION" \
-      --tag "$tag" \
-      ./image
-  fi
+if [ "$BUILD_AND_PUSH" = true ]; then
+  echo "Building docker images..."
+  docker build \
+    --provenance false \
+    --platform "linux/arm64" \
+    --build-arg "SHIM_VERSION=$SHIM_VERSION" \
+    --tag "$INSTALLER_IMAGE_ARM64" \
+    --push \
+    ./image
 
-  if [ "$DOCKER_PUSH" = true ]; then
-    echo "Pushing docker image for $arch..."
-    docker push "$tag"
-  fi
+  docker build \
+    --provenance false \
+    --platform "linux/amd64" \
+    --build-arg "SHIM_VERSION=$SHIM_VERSION" \
+    --tag "$INSTALLER_IMAGE_AMD64" \
+    --push \
+    ./image
+fi
 
-  tags+=("$tag")
-done
+if [ "$PUSH_MANIFEST" = true ]; then
+  echo "Building multi-platform manifest..."
+  docker manifest create --amend \
+    "$INSTALLER_IMAGE" \
+    "$INSTALLER_IMAGE_ARM64" \
+    "$INSTALLER_IMAGE_AMD64"
 
-echo "Building manifest..."
-docker manifest create \
-  --amend \
-  $DOCKER_TAG \
-  "${tags[@]}"
-for i in "${!architectures[@]}"
-do
-  echo "Annotating manifest for ${architectures[$i]}..."
+  echo "Annotating multi-platform manifests..."
   docker manifest annotate \
-    "$DOCKER_TAG" \
-    "${tags[$i]}" \
-    --arch "${architectures[$i]}" \
+    "$INSTALLER_IMAGE" \
+    "$INSTALLER_IMAGE_ARM64" \
+    --arch arm64 \
     --os linux
-done
-echo "Pushing manifest..."
-# docker manifest push $DOCKER_TAG
 
-# echo "Building helm chart..."
-# helm package ./chart \
-#   --version $SHIM_VERSION \
-#   --app-version "$SHIM_VERSION-eks"
+  docker manifest annotate \
+    "$INSTALLER_IMAGE" \
+    "$INSTALLER_IMAGE_AMD64" \
+    --arch amd64 \
+    --os linux
 
-# echo "Pushing helm chart..."
-# helm push \
-#   ./spin-containerd-shim-installer-$SHIM_VERSION.tgz \
-#   oci://$HELM_CHART
+  echo "Pushing manifest..."
+  docker manifest push "$INSTALLER_IMAGE"
+fi
+
+if [ "$PUSH_CHART" = true ]; then
+  echo "Building helm chart..."
+  helm package ./chart \
+    --version "$SHIM_VERSION" \
+    --app-version "$SHIM_VERSION-eks"
+
+  echo "Pushing helm chart..."
+  # the last part of the chart name is apparently inferred from package name
+  helm push \
+    ./spin-containerd-shim-installer-$SHIM_VERSION.tgz \
+    "oci://$ECR_HOST/fermyon"
+fi
