@@ -13,6 +13,8 @@ fullnameOverride: ""
 installer:
   hostEtcContainerdPath: /etc/containerd
   hostBinPath: /usr/local/bin
+  hostEtcPath: /etc
+  hostUsrLibPath: /usr/lib
 
 podAnnotations: {}
 

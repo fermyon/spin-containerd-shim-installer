@@ -7,11 +7,21 @@ set -euo
 ##
 HOST_CONTAINERD_CONFIG="${HOST_CONTAINERD_CONFIG:-/host/etc/containerd/config.toml}"
 HOST_BIN="${HOST_BIN:-/host/bin}"
+HOST_ETC="${HOST_ETC:-/host/etc}"
+HOST_USR_LIB="${HOST_USR_LIB:-/host/usr/lib}"
 
 RUNTIME_CONFIG_TYPE="${RUNTIME_CONFIG_TYPE:-io.containerd.spin.v1}"
 RUNTIME_CONFIG_HANDLE="${RUNTIME_CONFIG_HANDLE:-spin}"
 RUNTIME_CONFIG_TABLE="plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.${RUNTIME_CONFIG_HANDLE}"
-IS_EL=$(cat /etc/os-release | grep ID_LIKE | grep rhel)
+
+is_el() {
+  if [[ -f "${HOST_ETC}/os-release" ]]; then
+    echo "$(cat ${HOST_ETC}/os-release 2> /dev/null | grep ID_LIKE | grep rhel)"
+  fi
+  if [[ -f "${HOST_USR_LIB}/os-release" ]]; then
+    echo "$(cat ${HOST_USR_LIB} 2> /dev/null | grep ID_LIKE | grep rhel)"
+  fi
+}
 
 ##
 # helper functions
@@ -24,7 +34,8 @@ set_runtime_type() {
   echo "adding spin runtime '${RUNTIME_CONFIG_TYPE}' to ${HOST_CONTAINERD_CONFIG}"
   tmpfile=$(mktemp)
   toml set "${HOST_CONTAINERD_CONFIG}" "${RUNTIME_CONFIG_TABLE}.runtime_type" "${RUNTIME_CONFIG_TYPE}" > "${tmpfile}"
-  if [[ ! -z "${IS_EL}" ]]; then
+  if [[ ! -z "$(is_el)" ]]; then
+    echo "You are running Enterprise Linux, setting SystemdCgroup to true"
     second_tmpfile=$(mktemp)
     toml set "${tmpfile}" "plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc.options.SystemdCgroup" "true" > "${second_tmpfile}"
     mv -f ${second_tmpfile} ${tmpfile}

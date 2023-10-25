@@ -31,6 +31,12 @@ spec:
         - name: host-bin
           hostPath:
             path: {{ .Values.installer.hostBinPath }}
+        - name: host-etc
+          hostPath:
+            path: {{ .Values.installer.hostEtcPath }}
+        - name: host-usr-lib
+          hostPath:
+            path: {{ .Values.installer.hostUsrLibPath }}
       initContainers:
         - name: installer
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -49,6 +55,10 @@ spec:
               mountPath: /host/etc/containerd
             - name: host-bin
               mountPath: /host/bin
+            - name: host-etc
+              mountPath: /host/etc
+            - name: host-usr-lib
+              mountPath: /host/usr/lib
       containers:
         - name: pause
           image: k8s.gcr.io/pause:3.1
