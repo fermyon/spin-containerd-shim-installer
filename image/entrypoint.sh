@@ -11,6 +11,7 @@ HOST_BIN="${HOST_BIN:-/host/bin}"
 RUNTIME_CONFIG_TYPE="${RUNTIME_CONFIG_TYPE:-io.containerd.spin.v1}"
 RUNTIME_CONFIG_HANDLE="${RUNTIME_CONFIG_HANDLE:-spin}"
 RUNTIME_CONFIG_TABLE="plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.${RUNTIME_CONFIG_HANDLE}"
+IS_EL=$(cat /etc/os-release | grep ID_LIKE | grep rhel)
 
 ##
 # helper functions
@@ -23,6 +24,12 @@ set_runtime_type() {
   echo "adding spin runtime '${RUNTIME_CONFIG_TYPE}' to ${HOST_CONTAINERD_CONFIG}"
   tmpfile=$(mktemp)
   toml set "${HOST_CONTAINERD_CONFIG}" "${RUNTIME_CONFIG_TABLE}.runtime_type" "${RUNTIME_CONFIG_TYPE}" > "${tmpfile}"
+  if [[ ! -z "${IS_EL}" ]]; then
+    second_tmpfile=$(mktemp)
+    toml set "${tmpfile}" "plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc.options.SystemdCgroup" "true" > "${second_tmpfile}"
+    mv -f ${second_tmpfile} ${tmpfile}
+  fi
+
 
   # ensure the runtime_type was set
   if [ "$(get_runtime_type "${tmpfile}")" = "${RUNTIME_CONFIG_TYPE}" ]; then
