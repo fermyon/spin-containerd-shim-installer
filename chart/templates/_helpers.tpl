@@ -35,14 +35,8 @@ Common labels
 */}}
 {{- define "chart.labels" -}}
 {{ include "chart.selectorLabels" . }}
-{{- if hasSuffix "-eks" .Chart.AppVersion }}
 app.kubernetes.io/managed-by: EKS
 app.kubernetes.io/version: {{ .Chart.AppVersion | trimSuffix "-eks" | quote }}
-{{- else }}
-helm.sh/chart: {{ include "chart.chart" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
 {{- end }}
 
 {{/*

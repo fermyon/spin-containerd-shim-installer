@@ -33,8 +33,8 @@ spec:
             path: {{ .Values.installer.hostBinPath }}
       initContainers:
         - name: installer
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.installer.repository }}:{{ .Values.image.installer.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.installer.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
@@ -51,8 +51,8 @@ spec:
               mountPath: /host/bin
       containers:
         - name: pause
-          image: k8s.gcr.io/pause:3.1
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.image.registry }}/{{ .Values.image.pause.repository }}:{{ .Values.image.pause.tag }}"
+          imagePullPolicy: {{ .Values.image.pause.pullPolicy }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
