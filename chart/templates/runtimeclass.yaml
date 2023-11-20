@@ -1,5 +1,27 @@
+{{- $nodeSelector := .Values.nodeSelector }}
+{{- range .Values.runtimeClasses }}
+---
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
-  name: wasmtime-spin-v1
-handler: spin
+  name: {{ .name }}
+handler: {{ .handler }}
+{{- with $nodeSelector }}
+scheduling:
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- if .default }}
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: spin-{{ .default }}
+handler: {{ .handler }}
+{{- with $nodeSelector }}
+scheduling:
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

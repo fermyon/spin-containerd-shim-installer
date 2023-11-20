@@ -2,8 +2,8 @@
 
 image:
   pullPolicy: IfNotPresent
-  registry: ghcr.io
-  repository: fermyon/spin-containerd-shim-installer
+  registry: docker.io
+  repository: jpflueger/spin-containerd-shim-installer
   tag: ""
 
 imagePullSecrets: []
@@ -13,6 +13,20 @@ fullnameOverride: ""
 installer:
   hostEtcContainerdPath: /etc/containerd
   hostBinPath: /usr/local/bin
+
+runtimeClasses:
+  - name: spin-v0-9-0-v1
+    handler: spin-v0-9-0
+  - name: spin-v0-9-1-v1
+    handler: spin-v0-9-1
+  - name: spin-v0-9-2-v1
+    handler: spin-v0-9-2
+    default: v1
+  - name: spin-v0-9-3-v2
+    handler: spin-v0-9-3
+  - name: spin-v0-10-0-v2
+    handler: spin-v0-10-0
+    default: v2
 
 podAnnotations: {}
 
