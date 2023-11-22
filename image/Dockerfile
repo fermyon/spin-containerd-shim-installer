@@ -5,8 +5,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update -y \
     && apt-get install -y wget
 # NOTE: this binary uses the $(ARCH)-unknown-linux-musl triplet
-ARG SHIM_VERSION=0.5.1
-RUN wget -q -O - "https://github.com/deislabs/containerd-wasm-shims/releases/download/v${SHIM_VERSION}/containerd-wasm-shims-v1-linux-$(uname -m).tar.gz" | tar -xvz -f - containerd-shim-spin-v1
+ARG SHIM_VERSION=0.9.0
+RUN wget -q -O - "https://github.com/deislabs/containerd-wasm-shims/releases/download/v${SHIM_VERSION}/containerd-wasm-shims-v1-spin-linux-$(uname -m).tar.gz" | tar -xvz -f - containerd-shim-spin-v1
 
 # Download the toml CLI tool
 FROM rust:bullseye as toml-downloader
