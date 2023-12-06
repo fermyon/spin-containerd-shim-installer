@@ -8,8 +8,8 @@ The version of the container image and Helm chart directly correlates to the ver
 
 | containerd-shim-spin-v1                                                         | Spin                                                          |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [v0.8.0](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.8.0) | [v1.1.0](https://github.com/fermyon/spin/releases/tag/v1.4.0) |
-| [v0.7.0](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.7.0) | [v1.1.0](https://github.com/fermyon/spin/releases/tag/v1.2.0) |
+| [v0.8.0](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.8.0) | [v1.4.0](https://github.com/fermyon/spin/releases/tag/v1.4.0) |
+| [v0.7.0](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.7.0) | [v1.2.0](https://github.com/fermyon/spin/releases/tag/v1.2.0) |
 | [v0.6.0](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.6.0) | [v1.1.0](https://github.com/fermyon/spin/releases/tag/v1.1.0) |
 | [v0.5.1](https://github.com/deislabs/containerd-wasm-shims/releases/tag/v0.5.1) | [v1.0.0](https://github.com/fermyon/spin/releases/tag/v1.0.0) |
 
@@ -28,7 +28,7 @@ Because of these constraints, installing an additional runtime for containerd re
 This project provides a Helm chart that includes a [DaemonSet](chart/templates/daemonset.yaml) which runs an [init container](image/Dockerfile) _in privileged mode_ in order to copy the binary to the node and update the containerd config with the new runtime. This is the most generic way to install the containerd runtime shim in Kubernetes environments.
 
 ```shell
-helm install spin-containerd-shim-installer oci://ghcr.io/fermyon/charts/spin-containerd-shim-installer --version 0.1.0
+helm install spin-containerd-shim-installer oci://ghcr.io/fermyon/charts/spin-containerd-shim-installer --version 0.9.2
 ```
 
 ## Disclaimer
