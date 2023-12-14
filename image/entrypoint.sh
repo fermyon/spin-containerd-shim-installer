@@ -8,7 +8,7 @@ set -euo
 HOST_CONTAINERD_CONFIG="${HOST_CONTAINERD_CONFIG:-/host/etc/containerd/config.toml}"
 HOST_BIN="${HOST_BIN:-/host/bin}"
 
-RUNTIME_CONFIG_TYPE="${RUNTIME_CONFIG_TYPE:-io.containerd.spin.v1}"
+RUNTIME_CONFIG_TYPE="${RUNTIME_CONFIG_TYPE:-io.containerd.spin.v2}"
 RUNTIME_CONFIG_HANDLE="${RUNTIME_CONFIG_HANDLE:-spin}"
 RUNTIME_CONFIG_TABLE="plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.${RUNTIME_CONFIG_HANDLE}"
 
@@ -38,7 +38,7 @@ set_runtime_type() {
 ##
 # assertions
 ##
-if [ ! -f "./containerd-shim-spin-v1" ]; then
+if [ ! -f "./containerd-shim-spin-v2" ]; then
   echo "shim binary not found"
   exit 1
 fi
@@ -55,7 +55,7 @@ if [ ! -f "${HOST_CONTAINERD_CONFIG}" ]; then
 fi
 
 echo "copying the shim to the node's bin directory '${HOST_BIN}'"
-cp "./containerd-shim-spin-v1" "${HOST_BIN}"
+cp "./containerd-shim-spin-v2" "${HOST_BIN}"
 
 # check if the shim is already in the containerd config
 if [ "$(get_runtime_type "${HOST_CONTAINERD_CONFIG}")" = "${RUNTIME_CONFIG_TYPE}" ]; then
